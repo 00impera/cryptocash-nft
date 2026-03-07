@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptoCash NFT — Mint</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--neon:#39FF14;--neon-glow:0 0 10px #39FF14,0 0 30px #39FF1460;--bg:#030303}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);font-family:'Share Tech Mono',monospace;min-height:100vh;color:white;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(57,255,20,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(57,255,20,0.03) 1px,transparent 1px);background-size:50px 50px;pointer-events:none;z-index:0}
+nav{position:fixed;top:0;left:0;right:0;background:rgba(3,3,3,0.95);border-bottom:1px solid rgba(57,255,20,0.15);padding:16px 40px;display:flex;justify-content:space-between;align-items:center;z-index:100}
+.logo{font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:900;color:var(--neon);text-shadow:var(--neon-glow);letter-spacing:4px}
+.connect-btn{background:transparent;border:1px solid var(--neon);color:var(--neon);font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:2px;padding:10px 24px;border-radius:6px;cursor:pointer;transition:all 0.2s}
+.connect-btn:hover{background:rgba(57,255,20,0.1);box-shadow:var(--neon-glow)}
+.connect-btn.connected{border-color:#00ff88;color:#00ff88}
+.hero{padding:140px 40px 60px;text-align:center;position:relative;z-index:2}
+.hero-title{font-family:'Orbitron',monospace;font-size:clamp(3rem,9vw,7rem);font-weight:900;color:var(--neon);text-shadow:var(--neon-glow);letter-spacing:10px;line-height:1}
+.hero-sub{margin-top:16px;font-size:0.85rem;color:rgba(255,255,255,0.35);letter-spacing:6px}
+.hero-note{margin:50px auto;width:500px;max-width:90vw;height:220px;border-radius:20px;border:2px solid var(--neon);background:linear-gradient(135deg,#080808,#141414);position:relative;overflow:hidden;box-shadow:0 0 40px rgba(57,255,20,0.3);animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-15px) rotate(1deg)}}
+.note-inner{position:absolute;inset:0;display:flex;align-items:center;padding:30px;gap:30px}
+.coin{width:110px;height:110px;border-radius:50%;border:2px solid var(--neon);background:rgba(57,255,20,0.1);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;color:var(--neon);text-shadow:var(--neon-glow);flex-shrink:0;transition:all 0.5s}
+.note-info{flex:1}
+.note-title{font-family:'Orbitron',monospace;font-size:0.9rem;letter-spacing:4px;color:white;margin-bottom:10px}
+.serial-lbl{font-size:0.55rem;color:var(--neon);letter-spacing:2px;opacity:0.8}
+.serial{font-size:1rem;color:var(--neon);text-shadow:var(--neon-glow);letter-spacing:3px;font-weight:bold;margin-bottom:10px}
+.ts{font-size:0.6rem;color:rgba(255,255,255,0.5)}
+.badge{position:absolute;bottom:12px;right:12px;border:1px solid var(--neon);border-radius:4px;padding:3px 10px;font-size:0.55rem;color:var(--neon);background:rgba(0,0,0,0.7);letter-spacing:2px}
+.mint-section{padding:20px 40px 60px;max-width:700px;margin:0 auto;position:relative;z-index:2}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:30px}
+.stat{text-align:center;border:1px solid rgba(57,255,20,0.2);padding:14px 10px;border-radius:8px;background:rgba(57,255,20,0.04)}
+.stat-val{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--neon);text-shadow:0 0 10px var(--neon)}
+.stat-lbl{font-size:0.55rem;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-top:3px}
+.card{border:1px solid rgba(57,255,20,0.3);border-radius:16px;background:#0a0a0a;padding:36px;box-shadow:0 0 40px rgba(57,255,20,0.06)}
+.card-title{font-family:'Orbitron',monospace;font-size:0.9rem;letter-spacing:4px;color:white;margin-bottom:24px;text-align:center}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.option{border:1px solid rgba(57,255,20,0.2);border-radius:10px;padding:18px;cursor:pointer;transition:all 0.2s;text-align:center;background:rgba(0,0,0,0.3)}
+.option:hover,.option.active{border-color:var(--neon);background:rgba(57,255,20,0.08);box-shadow:0 0 20px rgba(57,255,20,0.15)}
+.opt-title{font-family:'Orbitron',monospace;font-size:0.72rem;color:var(--neon);letter-spacing:2px}
+.opt-desc{font-size:0.58rem;color:rgba(255,255,255,0.4);margin-top:4px}
+.opt-price{font-family:'Orbitron',monospace;font-size:1rem;color:white;margin-top:6px}
+.mint-btn{width:100%;padding:18px;background:transparent;border:2px solid var(--neon);color:var(--neon);font-family:'Orbitron',monospace;font-size:0.9rem;letter-spacing:4px;border-radius:10px;cursor:pointer;transition:all 0.3s;margin-bottom:14px}
+.mint-btn:hover{background:rgba(57,255,20,0.1);box-shadow:var(--neon-glow)}
+.mint-btn:disabled{opacity:0.4;cursor:not-allowed}
+.mint-btn.minting{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:var(--neon-glow)}50%{box-shadow:0 0 30px #39FF14,0 0 80px #39FF1480}}
+.info-row{display:flex;justify-content:space-between;font-size:0.58rem;color:rgba(255,255,255,0.25);padding:0 4px}
+.status{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:0.7rem;text-align:center;display:none}
+.status.success{display:block;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:#00ff88}
+.status.error{display:block;background:rgba(255,51,85,0.1);border:1px solid rgba(255,51,85,0.3);color:#ff3355}
+.status.loading{display:block;background:rgba(57,255,20,0.06);border:1px solid rgba(57,255,20,0.2);color:var(--neon)}
+.tx-link{display:none;margin-top:12px;text-align:center;font-size:0.62rem;color:var(--neon);text-decoration:none;border:1px solid rgba(57,255,20,0.2);padding:8px 16px;border-radius:6px}
+.tx-link.show{display:block}
+.coins-section{padding:0 40px 80px;max-width:1100px;margin:0 auto;position:relative;z-index:2}
+.section-title{font-family:'Orbitron',monospace;font-size:0.8rem;letter-spacing:5px;color:rgba(255,255,255,0.35);text-align:center;margin-bottom:24px}
+.coins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:10px}
+.chip{border:1px solid var(--c,rgba(255,255,255,0.1));border-radius:10px;padding:12px 8px;text-align:center;background:rgba(0,0,0,0.4);transition:all 0.2s}
+.chip:hover{transform:translateY(-3px);box-shadow:0 0 15px var(--c,rgba(255,255,255,0.1))}
+.chip-sym{font-family:'Orbitron',monospace;font-size:0.8rem;font-weight:700;color:var(--c,white)}
+.chip-name{font-size:0.48rem;color:rgba(255,255,255,0.3);margin-top:3px;letter-spacing:1px}
+footer{text-align:center;padding:40px;font-size:0.58rem;color:rgba(255,255,255,0.15);letter-spacing:3px;position:relative;z-index:2;border-top:1px solid rgba(57,255,20,0.08)}
+footer a{color:var(--neon);text-decoration:none}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">CRYPTOCASH</div>
+  <div style="display:flex;gap:20px;align-items:center;font-size:0.62rem;color:rgba(255,255,255,0.35)">
+    <span>SUPPLY <span style="color:var(--neon)" id="nav-supply">—</span></span>
+    <span>MONAD</span>
+  </div>
+  <button class="connect-btn" id="connect-btn" onclick="connectWallet()">⬡ CONNECT WALLET</button>
+</nav>
+
+<section class="hero">
+  <div class="hero-title">CRYPTOCASH</div>
+  <div class="hero-sub">ON-CHAIN NFT BANKNOTES · 20 COINS · MONAD NETWORK</div>
+  <div class="hero-note">
+    <div class="note-inner">
+      <div class="coin" id="hero-coin">₿</div>
+      <div class="note-info">
+        <div class="note-title">CRYPTOCASH NFT</div>
+        <div class="serial-lbl">SERIAL NUMBER</div>
+        <div class="serial">A7K2-9MXP-3QR8-YWVT</div>
+        <div class="ts" id="hero-ts">MONAD MAINNET</div>
+      </div>
+    </div>
+    <div class="badge">ERC-721 · ON-CHAIN SVG</div>
+  </div>
+</section>
+
+<section class="mint-section">
+  <div class="stats">
+    <div class="stat"><div class="stat-val" id="stat-supply">—</div><div class="stat-lbl">MINTED</div></div>
+    <div class="stat"><div class="stat-val">$1</div><div class="stat-lbl">PRICE</div></div>
+    <div class="stat"><div class="stat-val">20</div><div class="stat-lbl">COINS</div></div>
+    <div class="stat"><div class="stat-val">∞</div><div class="stat-lbl">SUPPLY</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">⬡ MINT YOUR CRYPTOCASH NFT</div>
+    <div class="options">
+      <div class="option active" id="opt-free" onclick="selectOpt('free')">
+        <div style="font-size:1.3rem;margin-bottom:6px">🎁</div>
+        <div class="opt-title">FREE MINT</div>
+        <div class="opt-desc">1x per wallet</div>
+        <div class="opt-price">FREE</div>
+      </div>
+      <div class="option" id="opt-paid" onclick="selectOpt('paid')">
+        <div style="font-size:1.3rem;margin-bottom:6px">💎</div>
+        <div class="opt-title">MINT</div>
+        <div class="opt-desc">Unlimited</div>
+        <div class="opt-price">0.001 MON</div>
+      </div>
+    </div>
+    <button class="mint-btn" id="mint-btn" onclick="handleMint()">⬡ CONNECT WALLET TO MINT</button>
+    <div class="info-row">
+      <span>Monad Mainnet · Chain 143</span>
+      <span>Gas ~$0.001</span>
+      <span>Random coin assigned</span>
+    </div>
+    <div class="status" id="status"></div>
+    <a class="tx-link" id="tx-link" target="_blank">VIEW TRANSACTION →</a>
+  </div>
+</section>
+
+<section class="coins-section">
+  <div class="section-title">20 COLLECTIBLE COINS</div>
+  <div class="coins-grid" id="coins-grid"></div>
+</section>
+
+<footer>
+  CRYPTOCASH NFT · MONAD ·
+  <a href="https://explorer.monad.xyz/address/0xf5C9cFfd9603a3aB3190B9cA02B9B7ceDc155Da2" target="_blank">CONTRACT 0xf5C9...5Da2</a>
+</footer>
+
+<script>
+const CONTRACT='0xf5C9cFfd9603a3aB3190B9cA02B9B7ceDc155Da2';
+const RPC='https://rpc.monad.xyz';
+const CHAIN_ID=143;
+const EXPLORER='https://explorer.monad.xyz';
+const ABI=['function mint() external payable','function firstFreeMint() external','function totalSupply() external view returns (uint256)','function hasFreeMinted(address) external view returns (bool)'];
+const coins=[
+  {sym:'BTC',name:'Bitcoin',color:'#F7931A',icon:'₿'},
+  {sym:'ETH',name:'Ethereum',color:'#627EEA',icon:'Ξ'},
+  {sym:'USDT',name:'Tether',color:'#26A17B',icon:'$'},
+  {sym:'BNB',name:'BNB',color:'#F3BA2F',icon:'◆'},
+  {sym:'SOL',name:'Solana',color:'#9945FF',icon:'◎'},
+  {sym:'XRP',name:'XRP',color:'#00AAE4',icon:'✕'},
+  {sym:'USDC',name:'USD Coin',color:'#2775CA',icon:'$'},
+  {sym:'DOGE',name:'Dogecoin',color:'#C2A633',icon:'Ð'},
+  {sym:'ADA',name:'Cardano',color:'#0033AD',icon:'₳'},
+  {sym:'AVAX',name:'Avalanche',color:'#E84142',icon:'A'},
+  {sym:'DOT',name:'Polkadot',color:'#E6007A',icon:'●'},
+  {sym:'LINK',name:'Chainlink',color:'#375BD2',icon:'⬡'},
+  {sym:'MATIC',name:'Polygon',color:'#8247E5',icon:'◈'},
+  {sym:'LTC',name:'Litecoin',color:'#BFBBBB',icon:'Ł'},
+  {sym:'SHIB',name:'Shiba Inu',color:'#FFA409',icon:'🐕'},
+  {sym:'UNI',name:'Uniswap',color:'#FF007A',icon:'🦄'},
+  {sym:'XLM',name:'Stellar',color:'#7D00FF',icon:'✦'},
+  {sym:'XMR',name:'Monero',color:'#FF6600',icon:'ɱ'},
+  {sym:'TRX',name:'Tron',color:'#EF0027',icon:'▲'},
+  {sym:'ATOM',name:'Cosmos',color:'#6F4E7C',icon:'⚛'},
+];
+let wallet=null,signer=null,contract=null,selOpt='free';
+
+// Build coins grid
+const grid=document.getElementById('coins-grid');
+coins.forEach(c=>{
+  const d=document.createElement('div');
+  d.className='chip';
+  d.style.setProperty('--c',c.color);
+  d.innerHTML=`<div class="chip-sym">${c.sym}</div><div class="chip-name">${c.name}</div>`;
+  grid.appendChild(d);
+});
+
+// Animate hero
+let hi=0;
+setInterval(()=>{
+  const c=coins[hi++%coins.length];
+  const el=document.getElementById('hero-coin');
+  el.textContent=c.icon;el.style.color=c.color;el.style.borderColor=c.color;
+  el.style.background=c.color+'20';el.style.textShadow=`0 0 15px ${c.color}`;
+},2000);
+setInterval(()=>{document.getElementById('hero-ts').textContent=new Date().toISOString().replace('T',' ').slice(0,19)+' UTC';},1000);
+
+async function loadSupply(){
+  try{
+    const p=new ethers.providers.JsonRpcProvider(RPC);
+    const c=new ethers.Contract(CONTRACT,ABI,p);
+    const s=(await c.totalSupply()).toString();
+    document.getElementById('stat-supply').textContent=s;
+    document.getElementById('nav-supply').textContent=s;
+  }catch(e){}
+}
+loadSupply();
+setInterval(loadSupply,30000);
+
+function selectOpt(o){
+  selOpt=o;
+  document.getElementById('opt-free').classList.toggle('active',o==='free');
+  document.getElementById('opt-paid').classList.toggle('active',o==='paid');
+}
+
+function showStatus(type,msg){
+  const el=document.getElementById('status');
+  el.className='status '+type;el.textContent=msg;
+}
+
+async function connectWallet(){
+  if(!window.ethereum){showStatus('error','❌ MetaMask not found! Please install MetaMask.');return;}
+  try{
+    showStatus('loading','⟳ Connecting...');
+    const accounts=await window.ethereum.request({method:'eth_requestAccounts'});
+    wallet=accounts[0];
+    try{
+      await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x'+CHAIN_ID.toString(16)}]});
+    }catch(e){
+      if(e.code===4902||e.code===-32603){
+        await window.ethereum.request({method:'wallet_addEthereumChain',params:[{
+          chainId:'0x'+CHAIN_ID.toString(16),chainName:'Monad Mainnet',
+          nativeCurrency:{name:'MON',symbol:'MON',decimals:18},
+          rpcUrls:[RPC],blockExplorerUrls:[EXPLORER]
+        }]});
+      }
+    }
+    const provider=new ethers.providers.Web3Provider(window.ethereum);
+    signer=provider.getSigner();
+    contract=new ethers.Contract(CONTRACT,ABI,signer);
+    const short=wallet.slice(0,6)+'...'+wallet.slice(-4);
+    const btn=document.getElementById('connect-btn');
+    btn.textContent='✓ '+short;btn.classList.add('connected');
+    document.getElementById('mint-btn').textContent='⬡ MINT NOW';
+    const used=await contract.hasFreeMinted(wallet);
+    if(used){selectOpt('paid');document.getElementById('opt-free').style.opacity='0.4';document.getElementById('opt-free').querySelector('.opt-desc').textContent='Already used';}
+    showStatus('success','✅ Connected! '+short);
+  }catch(e){showStatus('error','❌ '+(e.message||'Failed'));}
+}
+
+async function handleMint(){
+  if(!wallet){connectWallet();return;}
+  const btn=document.getElementById('mint-btn');
+  btn.disabled=true;btn.classList.add('minting');
+  document.getElementById('tx-link').classList.remove('show');
+  try{
+    let tx;
+    if(selOpt==='free'){btn.textContent='⟳ FREE MINTING...';showStatus('loading','⟳ Confirm in MetaMask...');tx=await contract.firstFreeMint();}
+    else{btn.textContent='⟳ MINTING...';showStatus('loading','⟳ Confirm in MetaMask...');tx=await contract.mint({value:ethers.utils.parseEther('0.001')});}
+    showStatus('loading','⟳ Waiting for confirmation...');
+    const receipt=await tx.wait();
+    showStatus('success','🎉 NFT MINTED SUCCESSFULLY!');
+    const tl=document.getElementById('tx-link');
+    tl.href=EXPLORER+'/tx/'+receipt.transactionHash;
+    tl.textContent='🔗 VIEW ON EXPLORER → '+receipt.transactionHash.slice(0,20)+'...';
+    tl.classList.add('show');
+    loadSupply();
+    btn.textContent='✓ MINTED!';btn.style.borderColor='#00ff88';btn.style.color='#00ff88';
+    setTimeout(()=>{btn.textContent='⬡ MINT ANOTHER';btn.style.borderColor='';btn.style.color='';btn.disabled=false;btn.classList.remove('minting');},5000);
+  }catch(e){
+    showStatus('error','❌ '+(e.reason||e.message||'Mint failed'));
+    btn.textContent='⬡ MINT NOW';btn.disabled=false;btn.classList.remove('minting');
+  }
+}
+
+if(window.ethereum){
+  window.ethereum.on('accountsChanged',(accounts)=>{
+    if(!accounts.length){wallet=null;signer=null;contract=null;document.getElementById('connect-btn').textContent='⬡ CONNECT WALLET';document.getElementById('connect-btn').classList.remove('connected');document.getElementById('mint-btn').textContent='⬡ CONNECT WALLET TO MINT';}
+    else{wallet=accounts[0];}
+  });
+}
+</script>
+</body>
+</html>
+EOF
