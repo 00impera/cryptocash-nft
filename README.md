@@ -3,7 +3,9 @@
 > **On-chain NFT Banknotes · 20 Collectible Coins · Monad Network**  
 > Mint · Swap · Collect — all in one cyberpunk-themed dApp
 
-![CryptoCash Banner](https://files.catbox.moe/r7791b.jfif)
+<p align="center">
+  <img src="https://files.catbox.moe/r7791b.jfif" alt="CryptoCash NFT Banner" width="100%">
+</p>
 
 ---
 
@@ -269,7 +271,7 @@ Each minted NFT is randomly assigned one of these 20 cryptocurrencies:
 
 ```
 cryptocash-nft/
-├── index.html          ← Main mint page (this file)
+├── index.html          ← Main mint page
 ├── README.md           ← This documentation
 └── assets/
     └── banner.jfif     ← Top banner image
@@ -286,7 +288,7 @@ git add index.html README.md
 git commit -m "CryptoCash NFT dApp"
 git remote add origin https://github.com/YOUR_USERNAME/cryptocash-nft.git
 git push -u origin main
-# Enable GitHub Pages in repo Settings → Pages → Deploy from branch: main
+# Enable GitHub Pages: Settings → Pages → Deploy from branch: main
 ```
 
 ### Direct Hosting
@@ -302,7 +304,11 @@ Just upload `index.html` to any static host:
 
 Follow the CryptoCash contract and wallet activity on **Monad Vision**:
 
-👉 [**monadvision.com/myspace?feature=Watchlist**](https://monadvision.com/myspace?feature=Watchlist)
+<p align="center">
+  <a href="https://monadvision.com/myspace?feature=Watchlist">
+    <img src="https://img.shields.io/badge/🔭%20MONAD%20VISION-OPEN%20WATCHLIST-%2339FF14?style=for-the-badge&labelColor=000000" alt="Monad Vision Watchlist">
+  </a>
+</p>
 
 Add contract `0xf5C9cFfd9603a3aB3190B9cA02B9B7ceDc155Da2` to your watchlist to monitor:
 - Live mint events
@@ -317,16 +323,20 @@ Add contract `0xf5C9cFfd9603a3aB3190B9cA02B9B7ceDc155Da2` to your watchlist to m
 If this project has been useful to you, consider supporting the developer.  
 All donations go directly to funding future development on Monad.
 
-![CryptoCash Banner](https://files.catbox.moe/r7791b.jfif)
+<p align="center">
+  <img src="https://files.catbox.moe/r7791b.jfif" alt="CryptoCash NFT" width="80%">
+</p>
 
-```
-Donate Address (Monad / EVM):
+<p align="center">
+  <b>💚 Donate Address — Monad / EVM</b>
+</p>
 
-0x592B35c8917eD36c39Ef73D0F5e92B0173560b2e
-```
+<p align="center">
+  <code>0x592B35c8917eD36c39Ef73D0F5e92B0173560b2e</code>
+</p>
 
-> Send MON or any EVM token to the address above.  
-> Every contribution helps keep the lights on. 🙏
+> Send MON or any EVM-compatible token to the address above.  
+> Every contribution helps keep the project alive. 🙏
 
 ---
 
@@ -335,6 +345,10 @@ Donate Address (Monad / EVM):
 **CRYPTOCASH NFT · MONAD MAINNET · 2025**  
 Built with 💚 for the Monad ecosystem
 
-[Contract](https://explorer.monad.xyz/address/0xf5C9cFfd9603a3aB3190B9cA02B9B7ceDc155Da2) · [Monad Vision Watchlist](https://monadvision.com/myspace?feature=Watchlist)
+<br>
+
+[![Contract](https://img.shields.io/badge/CONTRACT-0xf5C9...5Da2-%2339FF14?style=flat-square&labelColor=000)](https://explorer.monad.xyz/address/0xf5C9cFfd9603a3aB3190B9cA02B9B7ceDc155Da2)
+[![Monad Vision](https://img.shields.io/badge/MONAD%20VISION-WATCHLIST-%2300C1DE?style=flat-square&labelColor=000)](https://monadvision.com/myspace?feature=Watchlist)
+[![NEAR Intents](https://img.shields.io/badge/POWERED%20BY-NEAR%20INTENTS-%2300C1DE?style=flat-square&labelColor=000)](https://docs.near-intents.org)
 
 </div>
