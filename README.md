@@ -4,7 +4,7 @@
 > Mint · Swap · Collect — all in one cyberpunk-themed dApp
 
 <p align="center">
-  <img src="https://files.catbox.moe/r7791b.jfif" alt="CryptoCash NFT Banner" width="800">
+  <img src="https://files.catbox.moe/r7791b.jfif" alt="CryptoCash NFT Logo" width="120">
 </p>
 
 ---
