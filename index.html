@@ -756,38 +756,93 @@ function selectOpt(o){
 }
 function showStatus(type,msg){var el=document.getElementById('status');el.className='status '+type;el.textContent=msg;}
 
+// ── Build contract instance (called after every connect/chain switch) ──
+async function buildContract(){
+  // Always create a fresh provider AFTER any chain switch
+  var provider = new ethers.providers.Web3Provider(window.ethereum, 'any');
+  await provider.ready;
+  signer = provider.getSigner();
+  contractInst = new ethers.Contract(CONTRACT, ABI, signer);
+}
+
 // ── Connect wallet ─────────────────────────────────────────────
 async function connectWallet(){
   if(!window.ethereum){showStatus('error','\u274C MetaMask not found! Please install MetaMask.');return;}
   try{
     showStatus('loading','\u27F3 Connecting...');
-    var accounts=await window.ethereum.request({method:'eth_requestAccounts'});
-    wallet=accounts[0]; evmProvider=window.ethereum;
-    try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x'+CHAIN_ID.toString(16)}]});}
-    catch(e){if(e.code===4902||e.code===-32603){await window.ethereum.request({method:'wallet_addEthereumChain',params:[EVM_CHAINS['0x8F']]});}}
-    var provider=new ethers.providers.Web3Provider(window.ethereum);
-    signer=provider.getSigner();
-    contractInst=new ethers.Contract(CONTRACT,ABI,signer);
-    var short=wallet.slice(0,6)+'...'+wallet.slice(-4);
-    var btn=document.getElementById('connect-btn');
-    btn.textContent='\u2713 '+short; btn.classList.add('connected');
-    document.getElementById('mint-btn').textContent='\u2B21 MINT NOW';
-    var used=await contractInst.hasFreeMinted(wallet);
-    if(used){selectOpt('paid');document.getElementById('opt-free').style.opacity='0.4';document.getElementById('opt-free').querySelector('.opt-desc').textContent='Already used';}
+    // 1. Request accounts first
+    var accounts = await window.ethereum.request({method:'eth_requestAccounts'});
+    if(!accounts||!accounts.length){showStatus('error','\u274C No accounts returned');return;}
+    wallet = accounts[0];
+    evmProvider = window.ethereum;
+
+    // 2. Switch / add Monad network
+    try{
+      await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x8F'}]});
+    }catch(se){
+      if(se.code===4902||se.code===-32603||se.code===4001){
+        try{await window.ethereum.request({method:'wallet_addEthereumChain',params:[EVM_CHAINS['0x8F']]});}
+        catch(ae){showStatus('error','\u274C Please add Monad network manually');return;}
+      }
+    }
+
+    // 3. Build fresh provider + signer + contract AFTER network switch
+    await buildContract();
+
+    // 4. Update UI
+    var short = wallet.slice(0,6)+'...'+wallet.slice(-4);
+    var btn = document.getElementById('connect-btn');
+    btn.textContent = '\u2713 '+short;
+    btn.classList.add('connected');
+    document.getElementById('mint-btn').textContent = '\u2B21 MINT NOW';
+
+    // 5. Check free mint status
+    try{
+      var used = await contractInst.hasFreeMinted(wallet);
+      if(used){
+        selectOpt('paid');
+        document.getElementById('opt-free').style.opacity='0.4';
+        document.getElementById('opt-free').querySelector('.opt-desc').textContent='Already used';
+      }
+    }catch(ce){console.warn('hasFreeMinted check failed:',ce);}
+
     showStatus('success','\u2705 Connected! '+short);
-  }catch(e){showStatus('error','\u274C '+(e.message||'Failed'));}
+  }catch(e){
+    console.error('connectWallet error:',e);
+    showStatus('error','\u274C '+(e.message||'Connection failed'));
+  }
 }
 
 // ── Mint ───────────────────────────────────────────────────────
 async function handleMint(){
   if(!wallet){connectWallet();return;}
+  // Safety: rebuild contract if somehow null
+  if(!contractInst){
+    try{await buildContract();}
+    catch(e){showStatus('error','\u274C Wallet not ready — please reconnect');return;}
+  }
   var btn=document.getElementById('mint-btn');
   btn.disabled=true; btn.classList.add('minting');
   document.getElementById('tx-link').classList.remove('show');
   try{
+    // Make sure we are on Monad before minting
+    var curChain=await window.ethereum.request({method:'eth_chainId'});
+    if(curChain.toLowerCase()!=='0x8f'){
+      showStatus('loading','\u27F3 Switching to Monad...');
+      try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x8F'}]});}
+      catch(se){await window.ethereum.request({method:'wallet_addEthereumChain',params:[EVM_CHAINS['0x8F']]});}
+      await buildContract();
+    }
     var tx;
-    if(selOpt==='free'){btn.textContent='\u27F3 FREE MINTING...';showStatus('loading','\u27F3 Confirm in MetaMask...');tx=await contractInst.firstFreeMint();}
-    else{btn.textContent='\u27F3 MINTING...';showStatus('loading','\u27F3 Confirm in MetaMask...');tx=await contractInst.mint({value:ethers.utils.parseEther('0.001')});}
+    if(selOpt==='free'){
+      btn.textContent='\u27F3 FREE MINTING...';
+      showStatus('loading','\u27F3 Confirm in MetaMask...');
+      tx=await contractInst.firstFreeMint();
+    }else{
+      btn.textContent='\u27F3 MINTING...';
+      showStatus('loading','\u27F3 Confirm in MetaMask...');
+      tx=await contractInst.mint({value:ethers.utils.parseEther('0.001')});
+    }
     showStatus('loading','\u27F3 Waiting for confirmation...');
     var receipt=await tx.wait();
     showStatus('success','\uD83C\uDF89 NFT MINTED SUCCESSFULLY!');
@@ -799,15 +854,31 @@ async function handleMint(){
     btn.textContent='\u2713 MINTED!'; btn.style.borderColor='#00ff88'; btn.style.color='#00ff88';
     setTimeout(function(){btn.textContent='\u2B21 MINT ANOTHER';btn.style.borderColor='';btn.style.color='';btn.disabled=false;btn.classList.remove('minting');},5000);
   }catch(e){
-    showStatus('error','\u274C '+(e.reason||e.message||'Mint failed'));
+    console.error('Mint error:',e);
+    showStatus('error','\u274C '+(e.reason||e.data?.message||e.message||'Mint failed'));
     btn.textContent='\u2B21 MINT NOW'; btn.disabled=false; btn.classList.remove('minting');
   }
 }
 
 if(window.ethereum){
-  window.ethereum.on('accountsChanged',function(accs){
-    if(!accs.length){wallet=null;signer=null;contractInst=null;document.getElementById('connect-btn').textContent='\u2B21 CONNECT WALLET';document.getElementById('connect-btn').classList.remove('connected');document.getElementById('mint-btn').textContent='\u2B21 CONNECT WALLET TO MINT';}
-    else wallet=accs[0];
+  // Account changed — rebuild everything
+  window.ethereum.on('accountsChanged',async function(accs){
+    if(!accs||!accs.length){
+      wallet=null;signer=null;contractInst=null;
+      document.getElementById('connect-btn').textContent='\u2B21 CONNECT WALLET';
+      document.getElementById('connect-btn').classList.remove('connected');
+      document.getElementById('mint-btn').textContent='\u2B21 CONNECT WALLET TO MINT';
+      showStatus('info','Wallet disconnected');
+    }else{
+      wallet=accs[0];
+      try{await buildContract();}catch(e){}
+      var short=wallet.slice(0,6)+'...'+wallet.slice(-4);
+      document.getElementById('connect-btn').textContent='\u2713 '+short;
+    }
+  });
+  // Chain changed — rebuild provider
+  window.ethereum.on('chainChanged',async function(){
+    if(wallet){try{await buildContract();}catch(e){}}
   });
 }
 </script>
